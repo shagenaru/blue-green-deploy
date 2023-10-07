@@ -1,4 +1,3 @@
-  GNU nano 4.8                                                                                         docker.sh                                                                                                   
 #!/bin/bash
 
 running_containers() {
@@ -13,9 +12,8 @@ running_containers() {
 
 run_green() {
 docker-compose up -d --force-recreate green_backend
-docker_name=$(docker inspect -f '{{.Name}}' $(docker-compose ps -q green_backend) | cut -c2-)
 sleep 10
-if [[ $(docker inspect -f "{{.State.Health.Status}}" $docker_name) == 'starting' ]]; then
+if [[ $(docker inspect -f "{{.State.Health.Status}}" $(docker-compose ps -q green_backend)) == 'healthy' ]]; then
   docker-compose stop blue_backend
 else
   docker-compose stop green_backend
@@ -24,9 +22,8 @@ fi
 
 run_blue() {
 docker-compose up -d --force-recreate blue_backend
-docker_name=$(docker inspect -f '{{.Name}}' $(docker-compose ps -q blue_backend) | cut -c2-)
 sleep 10
-if [[ $(docker inspect -f "{{.State.Health.Status}}" $docker_name) == 'starting' ]]; then
+if [[ $(docker inspect -f "{{.State.Health.Status}}" $(docker-compose ps -q green_backend)) == 'healthy' ]]; then
   docker-compose stop green_backend
 else
   docker-compose stop blue_backend
@@ -35,9 +32,9 @@ fi
 
 run_container() {
 
-  if [ $(running_containers) == 'blue' ] || [ $(running_containers) == 'both' ]; then
+  if [ $(running_containers) == 'blue' ] || [ $(running_containers) == 'both' ]; then # проверяем если запущен только blue или оба
     run_green
-  else [ $(running_containers) == 'green' ]
+  else [ $(running_containers) == 'green' ] # проверяем если запущен только green
     run_blue
   fi
 }
